@@ -1,0 +1,12 @@
+{
+  "name": "equipment-management-unit",
+  "version": "1.0.0",
+  "description": "NIA Equipment Management Unit - vehicle availability and reservation system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "set-password": "node --no-warnings scripts/set-password.js"
+  },
+  "engines": { "node": ">=22.13" },
+  "license": "UNLICENSED"
+}

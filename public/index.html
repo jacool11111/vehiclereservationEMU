@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Equipment Management Unit</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🚗</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef3f9;--card:#fff;--tx:#1c2430;--mu:#5f6d80;--bd:#d5dfec;--ac:#0b4ea2;--gold:#f2b705;--hd1:#0b3d8f;--hd2:#1e8e3e;--free:#1a8a3a;--freebg:#e0f3e6;--occ:#c62f2f;--occbg:#fbe7e7}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b212b;--tx:#e8ecf2;--mu:#93a0b3;--bd:#2c3542;--ac:#5b93f0;--gold:#f2b705;--hd1:#0b3d8f;--hd2:#17703a;--free:#4cc98a;--freebg:#15301f;--occ:#ef7373;--occbg:#3a1a1a}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b212b;--tx:#e8ecf2;--mu:#93a0b3;--bd:#2c3542;--ac:#5b93f0;--gold:#f2b705;--hd1:#0b3d8f;--hd2:#17703a;--free:#4cc98a;--freebg:#15301f;--occ:#ef7373;--occbg:#3a1a1a}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:2px 0 0;color:#fff}h2{font-size:16px;margin:0 0 10px;color:var(--ac)}
+.hd{background:linear-gradient(90deg,var(--hd1),var(--hd2));border-radius:12px;padding:16px 18px;margin-bottom:16px;border-bottom:4px solid var(--gold)}.org{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#ffe08a;font-weight:600}
+#lg{border-top:4px solid var(--gold)}.tabs button.on{border-bottom:3px solid var(--gold)}button.ok{background:var(--free)}
+.sub{color:var(--mu);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px;flex:1 1 150px}
+input,select,button{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
+button{background:var(--ac);color:#fff;border:0;cursor:pointer;font-weight:600}
+button.ghost{background:transparent;color:var(--occ);border:1px solid var(--bd);padding:4px 8px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.v{border:1px solid var(--bd);border-radius:10px;padding:12px}
+.v b{font-size:16px}.plate{color:var(--mu);font-size:13px}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;margin:8px 0 4px}
+.free{background:var(--freebg);color:var(--free)}.occ{background:var(--occbg);color:var(--occ)}
+.strip{display:flex;gap:2px;margin-top:8px}
+.strip i{flex:1;height:14px;border-radius:3px;background:var(--freebg)}.strip i.o{background:var(--occ)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mu);font-size:12px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}.tabs button{background:var(--card);color:var(--tx);border:1px solid var(--bd)}.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+@media print{:root{--bg:#fff;--card:#fff;--tx:#000;--mu:#333;--bd:#888}body{background:#fff;color:#000}main>*{display:none!important}main>#tR{display:block!important}#tR .ctl{display:none!important}#rep{border:0;padding:0}main{padding:0;max-width:none}}
+.rp h3{margin:0 0 2px;font-size:20px}.rp table{margin-bottom:14px}.sig{display:flex;gap:40px;margin-top:36px}.sig div{flex:1;border-top:1px solid var(--tx);padding-top:4px;font-size:12px;color:var(--mu)}
+.pend{background:#fff3d6;color:#8a5a00}.rpt td input,.rpt td select{padding:4px 6px;font-size:13px}.ok{background:var(--ac);padding:4px 10px}.no{background:var(--occ);padding:4px 10px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}.cal .h{font-size:12px;color:var(--mu);text-align:center}
+.cd{border:1px solid var(--bd);border-radius:8px;min-height:92px;padding:4px;cursor:pointer;overflow:hidden;font-size:11px}.cd.sel{outline:2px solid var(--ac)}.cd.td .n{color:var(--ac);font-weight:700}
+.chip{display:block;border-radius:4px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chip.o{background:var(--occbg);color:var(--occ)}.chip.f{background:var(--freebg);color:var(--free)}
+@media(max-width:700px){.cd{min-height:58px}.chip.w{display:none}}
+.msg{color:var(--occ);font-size:13px;min-height:18px;margin-top:8px}.note{color:var(--mu);font-size:13px}
+
+/* ===== Responsive layout ===== */
+html{-webkit-text-size-adjust:100%}
+img,svg{max-width:100%}
+/* Desktop (>= 1025px) */
+@media screen and (min-width:1025px){
+  main{max-width:1200px;padding:24px 28px}
+  .card{padding:18px 20px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+  .cd{min-height:110px;font-size:12px}
+  h1{font-size:26px}
+  .tw td,.tw th{white-space:normal}
+  .rpt td input,.rpt td select{max-width:230px}
+  .row>label{max-width:300px}
+}
+/* Tablet (641px - 1024px) */
+@media screen and (min-width:641px) and (max-width:1024px){
+  main{max-width:900px;padding:18px 20px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  label{flex:1 1 200px}
+  .cd{min-height:84px}
+  .tw td,.tw th{white-space:normal}
+  .rpt td input,.rpt td select{max-width:150px}
+}
+/* Mobile (<= 640px) */
+@media screen and (max-width:640px){
+  main{padding:10px}
+  .hd{padding:12px 14px;margin-bottom:12px}h1{font-size:18px}.org{font-size:10px}
+  .card{padding:12px;margin-bottom:12px;border-radius:10px}
+  #lg{margin:16px auto!important;max-width:100%!important}
+  .grid{grid-template-columns:1fr}
+  .row{flex-direction:column;align-items:stretch}
+  .row>label,.row>button,.row>select{flex:1 1 auto;max-width:none!important;width:100%}
+  input,select,button{font-size:16px}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:0 0 auto;white-space:nowrap;padding:8px 12px;font-size:14px}
+  #lo{margin-left:0!important;width:100%}
+  #who{display:block;width:100%}
+  /* tables become stacked cards */
+  .tw table,.tw thead,.tw tbody,.tw tr,.tw td{display:block;width:100%}
+  .tw thead{display:none}
+  .tw tr{border:1px solid var(--bd);border-radius:10px;padding:6px 10px;margin-bottom:10px;background:var(--bg)}
+  .tw td{display:flex;justify-content:space-between;align-items:center;gap:12px;white-space:normal;border:0;padding:5px 0;text-align:right}
+  .tw td::before{content:attr(data-label);color:var(--mu);font-size:12px;font-weight:600;text-align:left;flex:0 0 36%}
+  .tw td[colspan]{display:block;text-align:left}
+  .tw td[colspan]::before{content:none}
+  .tw td select,.tw td input{max-width:62%;flex:1}
+  /* calendar */
+  .cnav{flex-direction:row!important;flex-wrap:wrap;align-items:center!important;gap:8px}
+  .cnav>button{width:auto!important;flex:0 0 auto}
+  .cnav h2{flex:1 1 0;min-width:0!important}
+  .cnav>label{flex:1 1 100%!important}
+  .cal{gap:2px}
+  .cd{min-height:54px;padding:2px;font-size:10px;border-radius:6px}
+  .chip{font-size:10px;padding:0 3px;text-align:center}
+  .chip .lb{display:none}
+  .sig{flex-direction:column;gap:24px}
+}
+/* Touch devices: bigger tap targets */
+@media (pointer:coarse){button,select,input{min-height:42px}button.ghost{min-height:36px}.cd{cursor:pointer}}
+</style></head><body><main>
+<header class="hd"><div class="org">National Irrigation Administration</div><h1>🚗 Equipment Management Unit</h1></header>
+
+<div id="lg" class="card" style="max-width:420px;margin:40px auto"><h2>🔐 Log in</h2>
+<div class="tabs" id="rt" hidden><button id="rE" class="on">🧑 Employee</button><button id="rD">🧑‍💼 Dispatcher</button></div>
+<p class="note" id="lgs">Checking your account…</p>
+<label id="lnw" hidden>Username<input id="ln" autocomplete="username" autocapitalize="off"></label><label id="lpw" hidden style="margin-top:8px">Password<input id="lp" type="password" autocomplete="current-password"></label>
+<div class="msg" id="lge"></div><button id="lgb" hidden style="margin-top:10px;width:100%"></button></div>
+<div id="app" hidden>
+<div class="card"><div class="row"><label style="max-width:200px">Check date<input type="date" id="cd"></label>
+<span class="note" id="who"></span><button id="lo" class="ghost" style="color:var(--tx);margin-left:auto;padding:8px 14px;font-size:14px">Log out</button></div></div>
+
+<div class="tabs"><button id="bV" class="on">🚗 Vehicles</button><button id="bC">📅 Calendar</button><button id="bD">🧑‍✈️ Drivers</button><button id="bR">📄 Monthly Report</button><button id="bQ">📥 Requests</button><button id="bE">📝 My Requests</button><button id="bA">👤 Accounts</button></div>
+<div id="tV"><div class="card"><h2>Vehicles on selected date</h2><div class="grid" id="vs"></div>
+<p class="note" style="margin:10px 0 0">Bars show the next 14 days from the selected date (red = occupied).</p></div>
+
+<div class="card" id="cRes" hidden><h2>Reserve a vehicle (dispatcher)</h2>
+<div class="row">
+<label>Vehicle<select id="fv"></select></label>
+<label>Driver<select id="fdr"></select></label>
+<label>Employee (passenger)<input id="fn" placeholder="Who is riding / requesting?"></label>
+<label>Destination<input id="fd" placeholder="Where is it going?"></label>
+<label>Purpose<input id="fp" placeholder="Optional"></label>
+<label>From<input type="date" id="fs"></label>
+<label>To<input type="date" id="fe"></label>
+<button id="fb">Reserve</button></div><div class="msg" id="msg"></div></div>
+
+<div class="card" id="cTb"><h2>Upcoming &amp; current reservations</h2><div class="tw"><table>
+<thead><tr><th>Vehicle</th><th>Driver</th><th>Employee</th><th>Destination</th><th>Purpose</th><th>From</th><th>To</th><th></th></tr></thead>
+<tbody id="tb"></tbody></table></div></div>
+
+<div class="card" id="cAdd" hidden><h2>Add a vehicle (dispatcher)</h2><div class="row">
+<label>Name / model<input id="an" placeholder="e.g. Toyota Hilux"></label>
+<label>Plate no.<input id="ap" placeholder="ABC 1234"></label>
+<button id="ab">Add vehicle</button></div></div>
+</div>
+<div id="tC" hidden><div class="card"><div class="row cnav" style="align-items:center"><button id="cpv" style="padding:8px 14px">◀</button><h2 id="cml" style="margin:0;min-width:150px;text-align:center"></h2><button id="cnx" style="padding:8px 14px">▶</button><button id="cto" style="background:var(--card);color:var(--tx);border:1px solid var(--bd)">Today</button>
+<label style="max-width:240px">Vehicle<select id="cvf"></select></label></div>
+<div class="cal" id="cg"></div><p class="note" style="margin:10px 0 0"><span class="chip o" style="display:inline">Red = occupied</span> <span class="chip f" style="display:inline">Green = available</span> &nbsp;Click a day to see details.</p></div>
+<div class="card" id="cdt"></div></div>
+<div id="tD" hidden>
+<div class="card"><h2>Drivers on selected date</h2><div class="grid" id="ds"></div></div>
+<div class="card" id="cAddD" hidden><h2>Add a driver (dispatcher)</h2><div class="row">
+<label>Driver name<input id="dn" placeholder="Full name"></label>
+<label>Contact no.<input id="dp" placeholder="Optional"></label>
+<button id="db2">Add driver</button></div><div class="msg" id="msg2"></div></div>
+<div class="card"><h2>Driver schedule</h2><div class="tw"><table><thead><tr><th>Driver</th><th>Vehicle</th><th>Employee</th><th>Destination</th><th>From</th><th>To</th></tr></thead><tbody id="dt"></tbody></table></div></div>
+</div>
+<div id="tR" hidden>
+<div class="card ctl"><div class="row"><label style="max-width:200px">Report month<input type="month" id="rm"></label>
+<button id="rp">🖨 Print report</button><button id="rd" style="background:var(--free)">⬇ Download report</button></div>
+<div class="msg" id="msg3"></div></div>
+<div class="card" id="rep"></div>
+</div></div>
+<div id="tQ" hidden>
+<div class="card rpt"><h2>Pending vehicle requests</h2><div class="tw"><table><thead><tr><th>Employee</th><th>Vehicle</th><th>Destination</th><th>Purpose</th><th>From</th><th>To</th><th>Assign driver</th><th>Remarks</th><th></th></tr></thead><tbody id="qp"></tbody></table></div><div class="msg" id="qmsg2"></div></div>
+<div class="card"><h2>Recently processed</h2><div class="tw"><table><thead><tr><th>Employee</th><th>Vehicle</th><th>Destination</th><th>From</th><th>To</th><th>Status</th><th>Remarks</th></tr></thead><tbody id="qh"></tbody></table></div></div>
+</div>
+<div id="tE" hidden>
+<div class="card"><h2>Request a vehicle</h2><p class="note" style="margin-top:0">Check availability in the Vehicles tab first. The dispatcher will approve and assign a driver.</p><p class="note" id="qlim" style="margin-top:0;color:var(--ac);font-weight:600"></p><div class="row">
+<label>Vehicle<select id="qv"></select></label>
+<label>Destination<input id="qd" placeholder="Where are you going?"></label>
+<label>Purpose<input id="qp2" placeholder="Optional"></label>
+<label>From<input type="date" id="qs"></label><label>To<input type="date" id="qe"></label>
+<button id="qb">Send request</button></div><div class="msg" id="qmsg"></div></div>
+<div class="card"><h2>My requests</h2><div class="tw"><table><thead><tr><th>Vehicle</th><th>Destination</th><th>From</th><th>To</th><th>Status</th><th>Dispatcher remarks</th><th></th></tr></thead><tbody id="qm"></tbody></table></div></div>
+</div>
+<div id="tA" hidden>
+<div class="card"><h2>Create user account</h2><p class="note" style="margin-top:0">Choose what the user is allowed to do. <b>Employee</b>: check availability and send requests. <b>Viewer</b>: check availability only. <b>Dispatcher</b>: full access.</p><div class="row">
+<label>Full name<input id="an2" placeholder="Juan Dela Cruz"></label>
+<label>Username<input id="au" placeholder="juan.delacruz" autocapitalize="off"></label>
+<label>Password<input id="apw" type="text" placeholder="At least 6 characters"></label>
+<label>Role<select id="arole"><option value="employee">Employee (can request)</option><option value="viewer">Viewer (view only)</option><option value="dispatcher">Dispatcher (full access)</option></select></label>
+<button id="aab">Create account</button></div><div class="msg" id="amsg"></div></div>
+<div class="card" id="rsc"><h2>Account restrictions</h2><p class="note" style="margin-top:0">Limit what a specific employee or viewer can do. Changes apply immediately, without logging the user out. Use 0 or leave blank for no limit.</p>
+<div class="row"><label style="max-width:360px">Account<select id="rsa"></select></label></div>
+<div class="row" style="margin-top:10px"><label style="flex:0 0 auto;flex-direction:row;align-items:center;gap:6px;color:var(--tx);font-size:14px"><input type="checkbox" id="rs1" style="min-height:0"> Can send vehicle requests</label>
+<label style="flex:0 0 auto;flex-direction:row;align-items:center;gap:6px;color:var(--tx);font-size:14px"><input type="checkbox" id="rs2" style="min-height:0"> Hide driver names</label>
+<label style="flex:0 0 auto;flex-direction:row;align-items:center;gap:6px;color:var(--tx);font-size:14px"><input type="checkbox" id="rs3" style="min-height:0"> Hide who is using vehicles and destinations</label></div>
+<div class="row" style="margin-top:10px"><label>Max days per request<input type="number" min="0" max="365" id="rs4" placeholder="No limit"></label><label>Max pending requests<input type="number" min="0" max="100" id="rs5" placeholder="No limit"></label><label>Access expires on<input type="date" id="rs6"></label></div>
+<div class="note" style="margin-top:10px">Allowed vehicles (tick none = all vehicles)</div><div class="row" id="rsv" style="gap:12px;margin-top:4px"></div>
+<button id="rsb" style="margin-top:12px">Save restrictions</button><div class="msg" id="rsmsg"></div></div>
+<div class="card rpt"><h2>User accounts</h2><div class="tw"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Restrictions</th><th>Status</th><th>New password</th><th></th></tr></thead><tbody id="at"></tbody></table></div></div>
+</div></div></main>
+<script>
+const $=id=>document.getElementById(id);
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const addD=(s,n)=>{const d=new Date(s+"T00:00");d.setDate(d.getDate()+n);return iso(d)};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let LIM={},VW=false,A=[],Rq=[],myName="",dl=null,V=[],B=[],D=[],db=null,uid=null,local=false,ED=false;
+/* ---- API client (talks to server.js) ---- */
+const API={async req(m,u,b){const r=await fetch(u,{method:m,headers:b?{"Content-Type":"application/json"}:{},body:b?JSON.stringify(b):undefined,credentials:"same-origin"});let j=null;try{j=await r.json()}catch(e){}if(!r.ok){const e=new Error((j&&j.error)||r.statusText);e.code=r.status;throw e}return j}};
+const subs=[];const refreshAll=()=>subs.forEach(x=>x.run());
+function sub(fetcher,cb){let last="",dead=false;const run=async()=>{if(dead)return;try{const r=await fetcher();const j=JSON.stringify(r);if(j!==last){last=j;cb(r)}}catch(e){if(e.code===401&&!$("app").hidden)location.reload()}};const x={run};subs.push(x);run();const t=setInterval(run,3000);return()=>{dead=true;clearInterval(t);const k=subs.indexOf(x);if(k>=0)subs.splice(k,1)}}
+db={collection(name){return{
+  doc(id){const url=`/api/${name}/${encodeURIComponent(id)}`;return{
+    async get(){const r=await API.req("GET",url);return{exists:r.exists,data:()=>r.data}},
+    async set(d){await API.req("PUT",url,d);refreshAll()},
+    async update(d){await API.req("PATCH",url,d);refreshAll()},
+    async delete(){await API.req("DELETE",url);refreshAll()},
+    onSnapshot(cb){return sub(()=>API.req("GET",url),r=>cb({exists:r.exists,data:()=>r.data}))}}},
+  onSnapshot(cb){return sub(()=>API.req("GET",`/api/${name}`),rows=>cb({docs:rows.map(r=>({id:r.id,data:()=>r.data}))}))}}}};
+dl={save:async({filename,data})=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"text/html"}));a.download=filename;document.body.appendChild(a);a.click();a.remove()}};
+const today=iso(new Date());$("cd").value=today;$("fs").value=today;$("fe").value=today;
+const dname=id=>{const x=D.find(z=>z.id===id);return x?x.name:"—"};
+const busyD=(id,d)=>B.find(b=>b.driverId===id&&b.start<=d&&d<=b.end);
+const busy=(vid,d)=>B.find(b=>b.vehicleId===vid&&b.start<=d&&d<=b.end);
+
+function render(){
+  const d=$("cd").value||today;
+  $("cRes").hidden=$("cAdd").hidden=$("cAddD").hidden=$("cTb").hidden=!ED;renderReq();renderAcc();renderCal();
+  const ds=$("fdr"),dk=ds.value;ds.innerHTML=D.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("")||"<option value=''>No drivers yet</option>";if(dk)ds.value=dk;
+  const sel=$("fv"),keep=sel.value;
+  sel.innerHTML=V.map(v=>`<option value="${esc(v.id)}">${esc(v.name)} (${esc(v.plate)})</option>`).join("")||"<option value=''>No vehicles yet</option>";
+  if(keep)sel.value=keep;
+  $("vs").innerHTML=V.length?V.map(v=>{
+    const b=busy(v.id,d);
+    let strip="";for(let i=0;i<14;i++)strip+=`<i class="${busy(v.id,addD(d,i))?"o":""}" title="${addD(d,i)}"></i>`;
+    return `<div class="v"><b>${esc(v.name)}</b><div class="plate">${esc(v.plate)}</div>
+    <span class="badge ${b?"occ":"free"}">${b?"OCCUPIED":"AVAILABLE"}</span>
+    ${b?`<div>Driver: <b>${esc(dname(b.driverId))}</b><br>Employee: ${esc(b.name||"—")} → ${esc(b.dest||"—")}<div class="note">${esc(b.start)} to ${esc(b.end)}</div></div>`:`<div class="note">Free on this date</div>`}
+    <div class="strip">${strip}</div></div>`}).join(""):`<p class="note">No vehicles yet. Add one below.</p>`;
+  const vn=id=>{const v=V.find(x=>x.id===id);return v?`${v.name} (${v.plate})`:"Unknown"};
+  const up=B.filter(b=>b.end>=today).sort((a,b)=>a.start.localeCompare(b.start));
+  $("ds").innerHTML=D.length?D.map(x=>{const b=busyD(x.id,d);const vv=b&&V.find(v=>v.id===b.vehicleId);
+    return `<div class="v"><b>${esc(x.name)}</b><div class="plate">${esc(x.phone||"")}</div><span class="badge ${b?"occ":"free"}">${b?"ON TRIP":"AVAILABLE"}</span>
+    ${b?`<div>${esc(vv?vv.name+" ("+vv.plate+")":"Vehicle")}<br>Employee: ${esc(b.name||"—")} → ${esc(b.dest||"—")}<div class="note">${b.start} to ${b.end}</div></div>`:`<div class="note">Free on this date</div>`}</div>`}).join(""):`<p class="note">No drivers yet.</p>`;
+  const vn2=id=>{const v=V.find(z=>z.id===id);return v?`${v.name} (${v.plate})`:"—"};
+  const ups=B.filter(b=>b.end>=today).sort((a,b)=>dname(a.driverId).localeCompare(dname(b.driverId))||a.start.localeCompare(b.start));
+  $("dt").innerHTML=ups.length?ups.map(b=>`<tr><td>${esc(dname(b.driverId))}</td><td>${esc(vn2(b.vehicleId))}</td><td>${esc(b.name||"—")}</td><td>${esc(b.dest||"—")}</td><td>${b.start}</td><td>${b.end}</td></tr>`).join(""):`<tr><td colspan="6" class="note">No trips scheduled.</td></tr>`;
+  $("tb").innerHTML=up.length?up.map(b=>`<tr><td>${esc(vn(b.vehicleId))}</td><td>${esc(dname(b.driverId))}</td><td>${esc(b.name||"—")}</td><td>${esc(b.dest||"—")}</td><td>${esc(b.purpose)}</td><td>${b.start}</td><td>${b.end}</td><td>${ED?`<button class="ghost" data-x="${esc(b.id)}">Cancel</button>`:""}</td></tr>`).join(""):`<tr><td colspan="8" class="note">No reservations.</td></tr>`;
+}
+$("cd").onchange=render;
+$("qs").value=$("qe").value=today;
+const strip=x=>{const {uid:_u,...y}=x;return y};
+const stB=st=>`<span class="badge ${st==="approved"?"free":st==="rejected"?"occ":"pend"}">${st.toUpperCase()}</span>`;
+const vLbl=id=>{const v=V.find(z=>z.id===id);return v?`${v.name} (${v.plate})`:"—"};
+const okV=id=>ED||!LIM.vehicleIds||!LIM.vehicleIds.length||LIM.vehicleIds.includes(id);
+function applyLim(){if(ED)return;$("bE").hidden=VW;if(VW&&!$("tE").hidden)tab("V");
+  const L=LIM,p=[];if(L.maxDays)p.push(`up to ${L.maxDays} day(s) per request`);if(L.maxPending)p.push(`up to ${L.maxPending} pending request(s) at a time`);
+  if(L.vehicleIds&&L.vehicleIds.length)p.push("allowed vehicles: "+L.vehicleIds.map(id=>(V.find(v=>v.id===id)||{name:"?"}).name).join(", "));if(L.expires)p.push("access until "+L.expires);
+  $("qlim").textContent=p.length?"Your limits: "+p.join(" · "):""}
+function renderReq(){applyLim();
+  const qv=$("qv"),k=qv.value;qv.innerHTML=V.filter(v=>okV(v.id)).map(v=>`<option value="${esc(v.id)}">${esc(v.name)} (${esc(v.plate)})</option>`).join("")||"<option value=''>No vehicles yet</option>";if(k)qv.value=k;
+  const pend=Rq.filter(r=>r.status==="pending");
+  $("bQ").textContent="📥 Requests"+(pend.length?` (${pend.length})`:"");
+  if(ED){
+    const keep=[...document.querySelectorAll("[id^=dr-],[id^=nt-],[id^=vh-]")].map(e=>[e.id,e.value]);
+    const opts=D.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+    $("qp").innerHTML=pend.length?pend.map(r=>`<tr><td>${esc(r.name)}</td><td><select id="vh-${esc(r.id)}">${V.map(v=>{const bz=B.some(x=>x.vehicleId===v.id&&x.start<=r.end&&r.start<=x.end);return `<option value="${esc(v.id)}"${v.id===r.vehicleId?" selected":""}>${esc(v.name)} (${esc(v.plate)})${bz?" ✖ occupied":" ✔ free"}</option>`}).join("")}</select><div class="note">Requested: ${esc(vLbl(r.vehicleId))}</div></td><td>${esc(r.dest)}</td><td>${esc(r.purpose)}</td><td>${r.start}</td><td>${r.end}</td><td><select id="dr-${esc(r.id)}"><option value="">Select…</option>${opts}</select></td><td><input id="nt-${esc(r.id)}" placeholder="Required if rejecting"></td><td><button class="ok" data-ap="${esc(r.id)}">Approve</button> <button class="no" data-rj="${esc(r.id)}">Reject</button></td></tr>`).join(""):`<tr><td colspan="9" class="note">No pending requests.</td></tr>`;
+    keep.forEach(([id,v])=>{const e=$(id);if(e)e.value=v});
+    const done=Rq.filter(r=>r.status!=="pending").sort((a,b)=>(b.created||"").localeCompare(a.created||"")).slice(0,15);
+    $("qh").innerHTML=done.length?done.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(vLbl(r.vehicleId))}</td><td>${esc(r.dest)}</td><td>${r.start}</td><td>${r.end}</td><td>${stB(r.status)}</td><td>${esc(r.note)}</td></tr>`).join(""):`<tr><td colspan="7" class="note">Nothing yet.</td></tr>`;
+  }else{
+    const mine=[...Rq].sort((a,b)=>(b.created||"").localeCompare(a.created||""));
+    $("qm").innerHTML=mine.length?mine.map(r=>`<tr><td>${esc(vLbl(r.vehicleId))}</td><td>${esc(r.dest)}</td><td>${r.start}</td><td>${r.end}</td><td>${stB(r.status)}</td><td>${esc(r.note)}</td><td>${r.status==="pending"?`<button class="ghost" data-cq="${esc(r.id)}">Cancel</button>`:""}</td></tr>`).join(""):`<tr><td colspan="7" class="note">You have no requests yet.</td></tr>`;
+  }
+}
+function limSum(a){if(a.role==="dispatcher")return"Full access";const p=[];if(a.role==="viewer"||a.canRequest===false)p.push("No requests");if(a.maxDays)p.push(a.maxDays+" day max");if(a.maxPending)p.push(a.maxPending+" pending max");if((a.vehicleIds||[]).length)p.push((a.vehicleIds||[]).length+" vehicle(s) only");if(a.hideDrivers)p.push("Drivers hidden");if(a.hideDetails)p.push("Trip details hidden");if(a.expires)p.push("Expires "+a.expires);return p.join(", ")||"None"}
+let rsSig="";
+function loadRs(){const a=A.find(x=>x.id===$("rsa").value);if(!a)return;
+  $("rs1").checked=a.canRequest!==false;$("rs2").checked=!!a.hideDrivers;$("rs3").checked=!!a.hideDetails;$("rs4").value=a.maxDays||"";$("rs5").value=a.maxPending||"";$("rs6").value=a.expires||"";
+  [...$("rsv").querySelectorAll("input")].forEach(i=>i.checked=(a.vehicleIds||[]).includes(i.value))}
+function renderRs(){const list=A.filter(a=>a.role!=="dispatcher");
+  const sig=list.map(a=>a.id).join(",")+"|"+V.map(v=>v.id+v.name).join(",");if(sig===rsSig)return;rsSig=sig;
+  const keep=$("rsa").value;$("rsa").innerHTML=list.map(a=>`<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join("")||"<option value=''>No employee accounts</option>";if(keep&&list.some(a=>a.id===keep))$("rsa").value=keep;
+  $("rsv").innerHTML=V.map(v=>`<label style="flex:0 0 auto;flex-direction:row;align-items:center;gap:6px;color:var(--tx);font-size:14px"><input type="checkbox" value="${esc(v.id)}" style="min-height:0"> ${esc(v.name)} (${esc(v.plate)})</label>`).join("")||'<span class="note">No vehicles yet.</span>';
+  loadRs()}
+$("rsa").onchange=loadRs;
+$("rsb").onclick=async()=>{const m=$("rsmsg");m.style.color="";m.textContent="";const id=$("rsa").value;if(!id){m.textContent="Choose an account first.";return}
+  try{await db.collection("accounts").doc(id).update({canRequest:$("rs1").checked,hideDrivers:$("rs2").checked,hideDetails:$("rs3").checked,maxDays:+$("rs4").value||0,maxPending:+$("rs5").value||0,expires:$("rs6").value||"",vehicleIds:[...$("rsv").querySelectorAll("input:checked")].map(i=>i.value)});
+    m.style.color="var(--free)";m.textContent=`Restrictions saved for ${id}. They apply immediately.`}catch(err){m.textContent="Could not save: "+(err.message||err)}};
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-rs]");if(!t||!ED)return;$("rsa").value=t.dataset.rs;loadRs();$("rsc").scrollIntoView({behavior:"smooth",block:"start"})});
+function renderAcc(){renderRs();if(!ED)return;const keep=[...document.querySelectorAll("[id^=pw-]")].map(e=>[e.id,e.value]);
+  $("at").innerHTML=A.length?A.map(a=>`<tr><td>${esc(a.name)}</td><td>${esc(a.id)}</td><td><select data-rl="${esc(a.id)}"><option value="employee"${(a.role||"employee")==="employee"?" selected":""}>Employee</option><option value="viewer"${a.role==="viewer"?" selected":""}>Viewer</option><option value="dispatcher"${a.role==="dispatcher"?" selected":""}>Dispatcher</option></select></td><td class="note" style="white-space:normal">${esc(limSum(a))}</td><td>${stB(a.active===false?"rejected":"approved").replace("REJECTED","DISABLED").replace("APPROVED","ACTIVE")}</td><td><input id="pw-${esc(a.id)}" placeholder="New password"> <button class="ok" data-sp="${esc(a.id)}">Set</button></td><td><button class="ghost" style="color:var(--tx)" data-rs="${esc(a.id)}">Restrictions</button> <button class="ghost" style="color:var(--tx)" data-tg="${esc(a.id)}">${a.active===false?"Enable":"Disable"}</button> <button class="ghost" data-dl="${esc(a.id)}">Delete</button></td></tr>`).join(""):`<tr><td colspan="7" class="note">No accounts yet.</td></tr>`;
+  keep.forEach(([id,v])=>{const e=$(id);if(e)e.value=v})}
+document.addEventListener("change",async e=>{const t=e.target;if(!t.dataset||!t.dataset.rl||!ED)return;const m=$("amsg");m.style.color="";m.textContent="";
+  try{await db.collection("accounts").doc(t.dataset.rl).update({role:t.value});m.style.color="var(--free)";m.textContent=`Role of ${t.dataset.rl} changed to ${t.value}. They must log in again.`}
+  catch(err){m.textContent="Could not change role: "+(err.message||err);renderAcc()}});
+const two=t=>{if(t.dataset.c)return true;const o=t.textContent;t.dataset.c="1";t.textContent="Confirm?";setTimeout(()=>{if(t.isConnected){delete t.dataset.c;t.textContent=o}},4000);return false};
+$("aab").onclick=async()=>{const m=$("amsg");m.style.color="";m.textContent="";
+  const name=$("an2").value.trim(),un=$("au").value.trim().toLowerCase(),pw=$("apw").value;
+  if(!name||!un||!pw){m.textContent="Fill in name, username and password.";return}
+  if(!/^[a-z0-9][a-z0-9._-]{2,29}$/.test(un)){m.textContent="Username: 3-30 letters/numbers (. _ - allowed), no spaces.";return}
+  if(pw.length<6){m.textContent="Password must be at least 6 characters.";return}
+  try{if((await db.collection("accounts").doc(un).get()).exists){m.textContent="That username already exists.";return}
+    await db.collection("accounts").doc(un).set({name,password:pw,role:$("arole").value,active:true,created:today});
+    $("an2").value=$("au").value=$("apw").value="";m.style.color="var(--free)";m.textContent=`Account created. Username: ${un}`}
+  catch(err){m.textContent="Could not create account: "+(err.message||err.code||err)}};
+document.addEventListener("click",async e=>{
+  const t=e.target.closest&&e.target.closest("[data-sp],[data-tg],[data-dl]");if(!t||!ED)return;
+  const id=t.dataset.sp||t.dataset.tg||t.dataset.dl,a=A.find(z=>z.id===id),m=$("amsg");if(!a)return;m.style.color="";m.textContent="";
+  try{
+    if(t.dataset.dl){if(!two(t))return;await db.collection("accounts").doc(id).delete();return}
+    if(t.dataset.tg){await db.collection("accounts").doc(id).update({active:a.active===false});return}
+    const pw=$("pw-"+id).value;if(pw.length<6){m.textContent="New password must be at least 6 characters.";return}
+    await db.collection("accounts").doc(id).update({password:pw});$("pw-"+id).value="";m.style.color="var(--free)";m.textContent="Password updated for "+id}
+  catch(err){m.textContent="Action failed: "+(err.message||err.code||err)}});
+let cm=today.slice(0,7),csel=today;
+const addM=(m,n)=>{const[y,mo]=m.split("-").map(Number);return iso(new Date(y,mo-1+n,1)).slice(0,7)};
+function renderCal(){
+  const sel=$("cvf"),k=sel.value;sel.innerHTML="<option value=''>All vehicles</option>"+V.map(v=>`<option value="${esc(v.id)}">${esc(v.name)} (${esc(v.plate)})</option>`).join("");sel.value=k||"";
+  const[y,mo]=cm.split("-").map(Number),n=new Date(y,mo,0).getDate(),off=new Date(y,mo-1,1).getDay();
+  $("cml").textContent=new Date(y,mo-1,1).toLocaleString("en",{month:"long",year:"numeric"});
+  const vs=sel.value?V.filter(v=>v.id===sel.value):V;
+  let h=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(x=>`<div class="h">${x}</div>`).join("")+"<div></div>".repeat(off);
+  for(let i=1;i<=n;i++){const d=cm+"-"+String(i).padStart(2,"0");
+    const occ=vs.map(v=>[v,busy(v.id,d)]).filter(x=>x[1]),fr=vs.length-occ.length;
+    h+=`<div class="cd${d===today?" td":""}${d===csel?" sel":""}" data-cd="${d}"><div class="n">${i}</div>${occ.length?`<span class="chip o">${occ.length}<span class="lb"> occupied</span></span>`:""}${fr>0?`<span class="chip f">${fr}<span class="lb"> available</span></span>`:""}${occ.slice(0,2).map(([v,b])=>`<span class="chip o w">${esc(v.name)}${b.dest?" → "+esc(b.dest):""}</span>`).join("")}${vs.filter(v=>!busy(v.id,d)).slice(0,2).map(v=>`<span class="chip f w">${esc(v.name)}</span>`).join("")}</div>`}
+  $("cg").innerHTML=h;
+  const av=vs.filter(v=>!busy(v.id,csel)),oc=vs.filter(v=>busy(v.id,csel)),canReq=!ED&&!VW&&csel>=today;
+  const nm=v=>`${esc(v.name)} (${esc(v.plate)})`;
+  $("cdt").innerHTML=`<h2>${csel}</h2><p style="margin:0 0 4px"><b style="color:var(--free)">Available (${av.length}):</b> ${av.length?av.map(nm).join(", "):"none"}</p><p style="margin:0 0 12px"><b style="color:var(--occ)">Occupied (${oc.length}):</b> ${oc.length?oc.map(nm).join(", "):"none"}</p>
+  <div class="tw"><table><thead><tr><th>Vehicle</th><th>Status</th><th>Employee</th><th>Driver</th><th>Destination</th><th>Dates</th>${canReq?"<th></th>":""}</tr></thead><tbody>${vs.length?vs.map(v=>{const b=busy(v.id,csel);return b?`<tr><td>${nm(v)}</td><td><span class="badge occ">OCCUPIED</span></td><td>${esc(b.name||"—")}</td><td>${esc(dname(b.driverId))}</td><td>${esc(b.dest||"—")}</td><td>${b.start} to ${b.end}</td>${canReq?"<td></td>":""}</tr>`:`<tr><td>${nm(v)}</td><td><span class="badge free">AVAILABLE</span></td><td colspan="4" class="note">Free on this date</td>${canReq?`<td>${okV(v.id)?`<button class="ok" data-rq="${esc(v.id)}">Request</button>`:`<span class="note">Restricted</span>`}</td>`:""}</tr>`}).join(""):`<tr><td colspan="7" class="note">No vehicles yet.</td></tr>`}</tbody></table></div>`}
+$("cpv").onclick=()=>{cm=addM(cm,-1);renderCal()};$("cnx").onclick=()=>{cm=addM(cm,1);renderCal()};
+$("cto").onclick=()=>{cm=today.slice(0,7);csel=today;renderCal()};$("cvf").onchange=renderCal;
+$("cdt").onclick=e=>{const b=e.target.closest("[data-rq]");if(!b)return;$("qv").value=b.dataset.rq;$("qs").value=$("qe").value=csel;tab("E");$("qd").focus()};
+$("cg").onclick=e=>{const c=e.target.closest("[data-cd]");if(c){csel=c.dataset.cd;renderCal()}};
+const saveItems=(u,list)=>db.collection("requests").doc(u).set({items:list.map(strip)});
+$("qb").onclick=async()=>{
+  const m=$("qmsg");m.style.color="";m.textContent="";
+  const r={id:"q"+Date.now().toString(36)+Math.random().toString(36).slice(2,4),vehicleId:$("qv").value,name:myName,dest:$("qd").value.trim(),purpose:$("qp2").value.trim(),start:$("qs").value,end:$("qe").value,status:"pending",note:"",created:new Date().toISOString()};
+  if(!r.vehicleId||!r.dest||!r.start||!r.end){m.textContent="Please choose a vehicle, destination and dates.";return}
+  if(r.end<r.start){m.textContent="End date cannot be before start date.";return}
+  if(r.start<today){m.textContent="Start date cannot be in the past.";return}
+  const nd=Math.round((new Date(r.end)-new Date(r.start))/864e5)+1;
+  if(!okV(r.vehicleId)){m.textContent="You are not allowed to request that vehicle.";return}
+  if(LIM.maxDays&&nd>LIM.maxDays){m.textContent=`Requests are limited to ${LIM.maxDays} day(s).`;return}
+  if(LIM.maxPending&&Rq.filter(x=>x.status==="pending").length>=LIM.maxPending){m.textContent=`You can only have ${LIM.maxPending} pending request(s) at a time.`;return}
+  const c=B.find(x=>x.vehicleId===r.vehicleId&&x.start<=r.end&&r.start<=x.end);
+  if(c){m.textContent=`This vehicle is already occupied (${c.start} to ${c.end}). Choose other dates or another vehicle.`;return}
+  try{await saveItems(uid,[...Rq,r]);$("qd").value=$("qp2").value="";m.style.color="var(--free)";m.textContent="Request sent to the dispatcher."}
+  catch(err){m.textContent="Could not send request: "+(err.message||err.code||err)}
+};
+document.addEventListener("click",async e=>{
+  const t=e.target.closest&&e.target.closest("[data-ap],[data-rj],[data-cq]");if(!t)return;
+  const id=t.dataset.ap||t.dataset.rj||t.dataset.cq,r=Rq.find(z=>z.id===id);if(!r)return;
+  const m=$("qmsg2");m.textContent="";
+  try{
+    if(t.dataset.cq){await saveItems(uid,Rq.filter(z=>z.id!==id));return}
+    if(!ED)return;
+    const note=($("nt-"+id)||{}).value||"";
+    const setSt=(st,x={},n=note)=>saveItems(r.uid,Rq.filter(z=>z.uid===r.uid).map(z=>z.id===id?{...z,status:st,note:n,...x}:z));
+    if(t.dataset.rj){if(!note.trim()){m.textContent="Please enter remarks explaining why the request is rejected.";const n=$("nt-"+id);if(n)n.focus();return}await setSt("rejected");return}
+    const drv=$("dr-"+id).value;if(!drv){m.textContent="Select a driver before approving.";return}
+    const vid=($("vh-"+id)||{}).value||r.vehicleId;
+    if(B.find(x=>x.vehicleId===vid&&x.start<=r.end&&r.start<=x.end)){m.textContent="The selected vehicle is occupied on those dates. Choose another vehicle.";return}
+    if(B.find(x=>x.driverId===drv&&x.start<=r.end&&r.start<=x.end)){m.textContent="That driver is already assigned on those dates.";return}
+    await db.collection("bookings").doc("b"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)).set({vehicleId:vid,driverId:drv,name:r.name,dest:r.dest,purpose:r.purpose,start:r.start,end:r.end,userId:r.uid,requestId:id});
+    const chg=vid!==r.vehicleId;
+    await setSt("approved",chg?{vehicleId:vid,reqVehicleId:r.vehicleId}:{},(chg?`Vehicle changed by dispatcher (requested: ${vLbl(r.vehicleId)}). `:"")+note);
+  }catch(err){(ED?m:$("qmsg")).textContent="Action failed: "+(err.message||err.code||err)}
+});
+$("rm").value=today.slice(0,7);$("rm").onchange=report;
+function reportBody(){
+  const m=$("rm").value||today.slice(0,7),[y,mo]=m.split("-").map(Number);
+  const first=m+"-01",last=iso(new Date(y,mo,0));
+  const label=new Date(y,mo-1,1).toLocaleString("en",{month:"long",year:"numeric"});
+  const list=B.filter(b=>b.start<=last&&b.end>=first).sort((a,b)=>a.start.localeCompare(b.start));
+  const vn=id=>{const v=V.find(z=>z.id===id);return v?[v.name,v.plate]:["Unknown",""]};
+  const days=b=>{const s0=b.start<first?first:b.start,e0=b.end>last?last:b.end;return Math.round((new Date(e0+"T00:00")-new Date(s0+"T00:00"))/864e5)+1};
+  const sum={};list.forEach(b=>{const k=b.vehicleId;sum[k]=sum[k]||{t:0,d:0};sum[k].t++;sum[k].d+=days(b)});
+  const sr=Object.keys(sum).map(k=>{const [n,p]=vn(k);return `<tr><td>${esc(n)}</td><td>${esc(p)}</td><td>${sum[k].t}</td><td>${sum[k].d}</td></tr>`}).join("");
+  const rows=list.map((b,i)=>{const [n,p]=vn(b.vehicleId);return `<tr><td>${i+1}</td><td>${esc(n)}<br>${esc(p)}</td><td>${esc(dname(b.driverId))}</td><td>${esc(b.name||"—")}</td><td>${esc(b.dest||"—")}</td><td>${esc(b.purpose)}</td><td>${b.start}</td><td>${b.end}</td><td>${days(b)}</td></tr>`}).join("");
+  return `<div class="rp"><div class="note" style="text-transform:uppercase;letter-spacing:.06em">National Irrigation Administration</div><h3>Equipment Management Unit — Monthly Vehicle Utilization Report</h3><div class="note" style="margin-bottom:12px">Month: <b>${label}</b> &nbsp;|&nbsp; Generated: ${today}</div>
+  <h2>Summary per vehicle</h2><div class="tw"><table><thead><tr><th>Vehicle</th><th>Plate</th><th>Trips</th><th>Days occupied</th></tr></thead><tbody>${sr||'<tr><td colspan="4">No trips this month.</td></tr>'}</tbody></table></div>
+  <h2>Trip details (${list.length})</h2><div class="tw"><table><thead><tr><th>#</th><th>Vehicle</th><th>Driver</th><th>Employee</th><th>Destination</th><th>Purpose</th><th>From</th><th>To</th><th>Days</th></tr></thead><tbody>${rows||'<tr><td colspan="9">No trips this month.</td></tr>'}</tbody></table></div>
+  <div class="sig"><div>Prepared by (Dispatcher)</div><div>Approved by</div></div></div>`;
+}
+function report(){$("rep").innerHTML=reportBody();labelTables()}
+function labelTables(){document.querySelectorAll(".tw table").forEach(t=>{const h=[...t.querySelectorAll("thead th")].map(x=>x.textContent.trim());t.querySelectorAll("tbody tr").forEach(r=>[...r.children].forEach((c,i)=>{if(!c.hasAttribute("colspan")&&h[i])c.setAttribute("data-label",h[i]);if(/^\d{4}-\d{2}-\d{2}$/.test(c.textContent.trim()))c.style.whiteSpace="nowrap"}))})}
+$("rp").onclick=()=>{report();try{window.print()}catch(e){$("msg3").textContent="Printing is blocked here. Use Download report, then print the file."}};
+$("rd").onclick=async()=>{report();const m=$("rm").value;
+  const doc=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Vehicle Report ${m}</title><style>body{font:14px system-ui,sans-serif;margin:24px;color:#000}table{width:100%;border-collapse:collapse;margin-bottom:14px}th,td{border:1px solid #888;padding:6px;text-align:left;vertical-align:top}h2{font-size:15px}.sig{display:flex;gap:40px;margin-top:40px}.sig div{flex:1;border-top:1px solid #000;padding-top:4px;font-size:12px}</style></head><body onload="setTimeout(()=>window.print(),300)">${reportBody()}</body></html>`;
+  if(!dl){$("msg3").textContent="Download is not available here.";return}
+  try{await dl.save({filename:`vehicle-report-${m}.html`,data:doc});$("msg3").textContent=""}catch(e){$("msg3").textContent="Download cancelled or failed."}};
+function tab(t){for(const k of["V","C","D","R","Q","E","A"]){$("t"+k).hidden=t!==k;$("b"+k).className=t===k?"on":""}if(t==="R")report()}
+$("bC").onclick=()=>tab("C");$("bA").onclick=()=>tab("A");$("bQ").onclick=()=>tab("Q");$("bE").onclick=()=>tab("E");
+$("bR").onclick=()=>tab("R");$("bV").onclick=()=>tab("V");$("bD").onclick=()=>tab("D");
+document.addEventListener("click",async e=>{
+  const t=e.target.closest&&e.target.closest("[data-x]");if(!t||!ED)return;
+  if(!t.dataset.c){t.dataset.c="1";t.textContent="Confirm cancel?";t.style.color="#fff";t.style.background="var(--occ)";
+    setTimeout(()=>{if(t.isConnected){delete t.dataset.c;t.textContent="Cancel";t.style.color="";t.style.background=""}},4000);return}
+  const x=t.dataset.x;t.disabled=true;t.textContent="Cancelling...";
+  if(local){B=B.filter(b=>b.id!==x);render();return}
+  try{await db.collection("bookings").doc(x).delete()}
+  catch(err){t.disabled=false;t.textContent="Cancel";delete t.dataset.c;alertMsg("Could not cancel: "+(err.message||err.code||err))}
+});
+function alertMsg(m){const el=$("msg");el.style.color="";el.textContent=m;el.scrollIntoView({block:"center"})}
+$("fb").onclick=async()=>{
+  const m=$("msg");m.textContent="";
+  if(!ED){return}
+  const b={vehicleId:$("fv").value,name:$("fn").value.trim(),dest:$("fd").value.trim(),purpose:$("fp").value.trim(),driverId:$("fdr").value,start:$("fs").value,end:$("fe").value,userId:uid||""};
+  if(!b.vehicleId||!b.driverId||!b.name||!b.dest||!b.start||!b.end){m.textContent="Please fill in vehicle, driver, employee, destination and dates.";return}
+  if(b.end<b.start){m.textContent="End date cannot be before start date.";return}
+  const c=B.find(x=>x.vehicleId===b.vehicleId&&x.start<=b.end&&b.start<=x.end);
+  if(c){m.textContent=`Not available: already reserved by ${c.name} (${c.start} to ${c.end}).`;return}
+  const dc=B.find(x=>x.driverId===b.driverId&&x.start<=b.end&&b.start<=x.end);
+  if(dc){m.textContent=`Driver not available: already assigned to ${dname(dc.driverId)}'s trip (${dc.start} to ${dc.end}).`;return}
+  const id="b"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  if(local){B.push({id,...b});render();$("fd").value=$("fp").value="";return}
+  try{await db.collection("bookings").doc(id).set(b);$("fd").value=$("fp").value="";m.style.color="var(--free)";m.textContent="Reserved!";setTimeout(()=>{m.textContent="";m.style.color=""},2500)}
+  catch(err){m.textContent="Could not save: "+(err.message||err.code)}
+};
+$("db2").onclick=async()=>{
+  if(!ED)return;const name=$("dn").value.trim();if(!name)return;
+  const id="d"+Date.now().toString(36);
+  try{await db.collection("drivers").doc(id).set({name,phone:$("dp").value.trim()});$("dn").value=$("dp").value=""}catch(err){$("msg2").textContent="Could not add driver: "+(err.message||err.code)}
+};
+$("ab").onclick=async()=>{
+  if(!ED)return;
+  const name=$("an").value.trim(),plate=$("ap").value.trim();if(!name||!plate)return;
+  const id="v"+Date.now().toString(36);
+  if(local){V.push({id,name,plate});render()}
+  else try{await db.collection("vehicles").doc(id).set({name,plate})}catch(err){$("msg").textContent="Could not add vehicle: "+(err.message||err.code)}
+  $("an").value=$("ap").value="";
+};
+
+render();
+async function initLogin(){
+  const lgb=$("lgb");let role="E";
+  $("rt").hidden=false;$("lnw").hidden=$("lpw").hidden=false;
+  setRole=r=>{role=r;$("rE").className=r==="E"?"on":"";$("rD").className=r==="D"?"on":"";$("lge").textContent="";lgb.hidden=false;
+    lgb.textContent=r==="D"?"Log in as Dispatcher":"Log in as Employee";
+    $("lgs").textContent=r==="D"?"Enter the dispatcher username and password.":"Log in with the username and password given by your dispatcher."};
+  $("rE").onclick=()=>setRole("E");$("rD").onclick=()=>setRole("D");setRole("E");
+  const go=async()=>{
+    const e=$("lge");e.textContent="";
+    const un=$("ln").value.trim().toLowerCase(),pw=$("lp").value;
+    if(!un||!pw){e.textContent="Enter your username and password.";return}
+    lgb.disabled=true;
+    try{const r=await API.req("POST","/api/login",{role:role==="D"?"dispatcher":"employee",username:un,password:pw});
+      ED=r.role==="dispatcher";LIM=r.limits||{};VW=r.role==="viewer"||LIM.canRequest===false;myName=r.name;uid=r.username}
+    catch(err){e.textContent=err.message||"Login failed.";return}
+    finally{lgb.disabled=false}
+    $("lp").value="";$("lg").hidden=true;$("app").hidden=false;
+    $("who").textContent=`${myName} — ${ED?"Dispatcher":VW?"Viewer":"Employee"}`;
+    if(ED||VW){$("bE").hidden=true}
+    if(!ED){["bD","bR","bQ","bA"].forEach(x=>$(x).hidden=true);$("bE").textContent="📝 Request a Vehicle"}
+    render();start();
+  };
+  lgb.onclick=go;$("lp").onkeydown=ev=>{if(ev.key==="Enter")go()};$("ln").onkeydown=ev=>{if(ev.key==="Enter")go()};
+}
+let unsubs=[],setRole=()=>{};
+$("lo").onclick=()=>{fetch("/api/logout",{method:"POST"});
+  unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];
+  V=[];B=[];D=[];Rq=[];myName="";
+  try{localStorage.removeItem("vr_name")}catch(e){}
+  ["bD","bR","bQ","bE","bA"].forEach(x=>$(x).hidden=false);tab("V");
+  $("app").hidden=true;$("lg").hidden=false;$("ln").value=$("lp").value="";$("lge").textContent="";
+  ED=false;VW=false;setRole("E");$("lgs").textContent="You have been logged out. Choose how to log in again.";
+};
+function start(){
+  unsubs.push(db.collection("vehicles").onSnapshot(s=>{V=s.docs.map(d=>({id:d.id,...d.data()}));render()}));
+  unsubs.push(db.collection("drivers").onSnapshot(s=>{D=s.docs.map(d=>({id:d.id,...d.data()}));render()}));
+  unsubs.push(db.collection("bookings").onSnapshot(s=>{B=s.docs.map(d=>({id:d.id,...d.data()}));render();if(!$("tR").hidden)report()}));
+  if(ED)unsubs.push(db.collection("accounts").onSnapshot(s=>{A=s.docs.map(d=>({id:d.id,...d.data()}));render()}));
+  if(ED)unsubs.push(db.collection("requests").onSnapshot(s=>{Rq=s.docs.flatMap(d=>((d.data()||{}).items||[]).map(i=>({...i,uid:d.id})));render()}));
+  if(!ED)unsubs.push(sub(()=>API.req("GET","/api/me"),r=>{LIM=r.limits||{};VW=r.role==="viewer"||LIM.canRequest===false;applyLim();render()}));
+  if(!ED)unsubs.push(db.collection("requests").doc(uid).onSnapshot(s=>{Rq=s.exists?((s.data()||{}).items||[]).map(i=>({...i,uid})):[];render()}));
+}
+{const render0=render;render=function(){render0();labelTables()}}
+initLogin();
+</script></body></html>

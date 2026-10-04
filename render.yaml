@@ -1,0 +1,16 @@
+# Render.com blueprint. A persistent disk requires a paid plan (starter).
+services:
+  - type: web
+    name: emu-vehicle-reservation
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    disk:
+      name: emu-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ADMIN_USER
+        value: dispatcher
+      - key: ADMIN_PASS
+        sync: false
