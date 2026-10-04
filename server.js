@@ -1,17 +1,153 @@
 "use strict";
-/* Equipment Management Unit - server. No npm packages needed (Node 22.13+). */
+/* Equipment Management Unit - server. Compatible with Node 22+ and Vercel Serverless. */
 const http = require("http"), fs = require("fs"), path = require("path"), crypto = require("crypto");
-const { DatabaseSync } = require("node:sqlite");
 
+const IS_VERCEL = !!process.env.VERCEL;
 const PORT = +process.env.PORT || 3000, HOST = process.env.HOST || "0.0.0.0";
-const DATA = process.env.DATA_DIR || path.join(__dirname, "data");
-const PUB = path.join(__dirname, "public");
+const DATA = process.env.DATA_DIR || (IS_VERCEL ? "/tmp" : path.join(__dirname, "data"));
+const PUB = path.join(process.cwd(), "public");
 const SESSION_MS = 12 * 3600 * 1000;
-fs.mkdirSync(DATA, { recursive: true });
-const db = new DatabaseSync(path.join(DATA, "emu.db"));
-db.exec(fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8"));
 
-const st = {
+try {
+  fs.mkdirSync(DATA, { recursive: true });
+} catch (e) {
+  console.warn("Notice: could not create DATA directory:", e.message);
+}
+
+/* ---------- storage setup (SQLite with JSON fallback) ---------- */
+let db = null;
+let useSqlite = false;
+
+try {
+  const { DatabaseSync } = require("node:sqlite");
+  const dbFile = path.join(DATA, "emu.db");
+  db = new DatabaseSync(dbFile);
+  const schemaFile = path.join(__dirname, "schema.sql");
+  if (fs.existsSync(schemaFile)) {
+    db.exec(fs.readFileSync(schemaFile, "utf8"));
+  }
+  useSqlite = true;
+} catch (e) {
+  console.warn("node:sqlite unavailable or failed to initialize, using JSON storage fallback:", e.message);
+}
+
+// Fallback JSON-file store
+const storeFile = path.join(DATA, "emu_store.json");
+let store = { docs: {}, admins: {}, sessions: {} };
+
+function loadStore() {
+  try {
+    if (fs.existsSync(storeFile)) {
+      const parsed = JSON.parse(fs.readFileSync(storeFile, "utf8"));
+      if (parsed) {
+        store.docs = parsed.docs || {};
+        store.admins = parsed.admins || {};
+        store.sessions = parsed.sessions || {};
+      }
+    }
+  } catch (e) {}
+}
+
+function saveStore() {
+  try {
+    fs.writeFileSync(storeFile, JSON.stringify(store));
+  } catch (e) {}
+}
+
+loadStore();
+
+const fallbackSt = {
+  get: {
+    get: (col, id) => {
+      loadStore();
+      const val = store.docs[`${col}:${id}`];
+      return val !== undefined ? { data: val } : null;
+    }
+  },
+  list: {
+    all: (col) => {
+      loadStore();
+      const prefix = `${col}:`;
+      const out = [];
+      for (const k of Object.keys(store.docs)) {
+        if (k.startsWith(prefix)) {
+          out.push({ id: k.slice(prefix.length), data: store.docs[k] });
+        }
+      }
+      out.sort((a, b) => a.id.localeCompare(b.id));
+      return out;
+    }
+  },
+  put: {
+    run: (col, id, data) => {
+      loadStore();
+      store.docs[`${col}:${id}`] = data;
+      saveStore();
+    }
+  },
+  del: {
+    run: (col, id) => {
+      loadStore();
+      delete store.docs[`${col}:${id}`];
+      saveStore();
+    }
+  },
+  admin: {
+    get: (un) => {
+      loadStore();
+      return store.admins[un] || null;
+    }
+  },
+  addAdmin: {
+    run: (username, name, salt, hash) => {
+      loadStore();
+      store.admins[username] = { username, name, salt, hash };
+      saveStore();
+    }
+  },
+  sesAdd: {
+    run: (token, role, username, name, expires) => {
+      loadStore();
+      store.sessions[token] = { token, role, username, name, expires };
+      saveStore();
+    }
+  },
+  sesGet: {
+    get: (t) => {
+      loadStore();
+      return store.sessions[t] || null;
+    }
+  },
+  sesDel: {
+    run: (t) => {
+      loadStore();
+      delete store.sessions[t];
+      saveStore();
+    }
+  },
+  sesClean: {
+    run: (now) => {
+      loadStore();
+      let ch = false;
+      for (const t of Object.keys(store.sessions)) {
+        if (store.sessions[t].expires < now) { delete store.sessions[t]; ch = true; }
+      }
+      if (ch) saveStore();
+    }
+  },
+  sesDelUser: {
+    run: (un) => {
+      loadStore();
+      let ch = false;
+      for (const t of Object.keys(store.sessions)) {
+        if (store.sessions[t].username === un) { delete store.sessions[t]; ch = true; }
+      }
+      if (ch) saveStore();
+    }
+  }
+};
+
+const st = useSqlite ? {
   get: db.prepare("SELECT data FROM docs WHERE col=? AND id=?"),
   list: db.prepare("SELECT id,data FROM docs WHERE col=? ORDER BY id"),
   put: db.prepare("INSERT INTO docs(col,id,data) VALUES(?,?,?) ON CONFLICT(col,id) DO UPDATE SET data=excluded.data,updated_at=CURRENT_TIMESTAMP"),
@@ -23,7 +159,7 @@ const st = {
   sesDel: db.prepare("DELETE FROM sessions WHERE token=?"),
   sesClean: db.prepare("DELETE FROM sessions WHERE expires<?"),
   sesDelUser: db.prepare("DELETE FROM sessions WHERE username=?"),
-};
+} : fallbackSt;
 
 /* ---------- passwords (scrypt) ---------- */
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 64).toString("hex");
@@ -33,7 +169,11 @@ const verify = (pw, salt, hash) => {
 const newSalt = () => crypto.randomBytes(12).toString("hex");
 
 /* seed first dispatcher */
-if (!db.prepare("SELECT COUNT(*) c FROM admins").get().c) {
+const hasAdmins = useSqlite
+  ? !!db.prepare("SELECT COUNT(*) c FROM admins").get().c
+  : Object.keys(store.admins).length > 0;
+
+if (!hasAdmins) {
   const u = (process.env.ADMIN_USER || "dispatcher").toLowerCase(), p = process.env.ADMIN_PASS || "ChangeMe123!", s = newSalt();
   st.addAdmin.run(u, "Dispatcher", s, hashPw(p, s));
   console.log(`\n>>> First run: dispatcher account created.\n>>> Username: ${u}\n>>> Password: ${p}\n>>> CHANGE IT NOW:  npm run set-password -- ${u} "NewPassword"\n`);
@@ -41,11 +181,22 @@ if (!db.prepare("SELECT COUNT(*) c FROM admins").get().c) {
 
 /* ---------- helpers ---------- */
 const json = (res, code, obj, extra = {}) => { res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store", ...extra }); res.end(JSON.stringify(obj)); };
-const readBody = req => new Promise((ok, no) => {
-  let n = 0; const c = [];
-  req.on("data", d => { n += d.length; if (n > 1e6) { no(Object.assign(new Error("Too large"), { code: 413 })); req.destroy(); } else c.push(d); });
-  req.on("end", () => { try { ok(c.length ? JSON.parse(Buffer.concat(c).toString()) : {}); } catch { no(Object.assign(new Error("Invalid JSON"), { code: 400 })); } });
-});
+
+const readBody = req => {
+  if (req.body !== undefined) {
+    if (typeof req.body === "string") {
+      try { return Promise.resolve(JSON.parse(req.body)); } catch { return Promise.reject(Object.assign(new Error("Invalid JSON"), { code: 400 })); }
+    }
+    return Promise.resolve(req.body || {});
+  }
+  return new Promise((ok, no) => {
+    let n = 0; const c = [];
+    req.on("data", d => { n += d.length; if (n > 1e6) { no(Object.assign(new Error("Too large"), { code: 413 })); req.destroy(); } else c.push(d); });
+    req.on("end", () => { try { ok(c.length ? JSON.parse(Buffer.concat(c).toString()) : {}); } catch { no(Object.assign(new Error("Invalid JSON"), { code: 400 })); } });
+    req.on("error", no);
+  });
+};
+
 const cookie = h => { const o = {}; (h || "").split(";").forEach(x => { const i = x.indexOf("="); if (i > 0) o[x.slice(0, i).trim()] = x.slice(i + 1).trim(); }); return o; };
 const todayStr = () => new Date().toLocaleDateString("en-CA", { timeZone: process.env.APP_TZ || "Asia/Manila" });
 const limitsOf = (a, role) => ({
@@ -54,6 +205,7 @@ const limitsOf = (a, role) => ({
   maxDays: +a.maxDays || 0, maxPending: +a.maxPending || 0,
   hideDrivers: !!a.hideDrivers, hideDetails: !!a.hideDetails, expires: a.expires || "",
 });
+
 function getUser(req) {
   const t = cookie(req.headers.cookie).sid; if (!t) return null;
   const s = st.sesGet.get(t); if (!s) return null;
@@ -66,9 +218,10 @@ function getUser(req) {
   }
   return u;
 }
-const secure = req => process.env.COOKIE_SECURE === "1" || (process.env.TRUST_PROXY === "1" && req.headers["x-forwarded-proto"] === "https");
+
+const secure = req => process.env.COOKIE_SECURE === "1" || IS_VERCEL || (process.env.TRUST_PROXY === "1" && req.headers["x-forwarded-proto"] === "https");
 const fails = new Map();
-const ipOf = req => (process.env.TRUST_PROXY === "1" && req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").toString().split(",")[0].trim();
+const ipOf = req => ((process.env.TRUST_PROXY === "1" || IS_VERCEL) && req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").toString().split(",")[0].trim();
 
 /* ---------- access rules ---------- */
 const COLS = new Set(["vehicles", "drivers", "bookings", "requests", "accounts"]);
@@ -139,7 +292,9 @@ function applyPassword(data, oldData) {
 
 /* ---------- API ---------- */
 async function api(req, res, p) {
-  const parts = p.split("/").filter(Boolean).slice(1), method = req.method;
+  let subPath = p;
+  if (subPath.startsWith("/api")) subPath = subPath.slice(4);
+  const parts = subPath.split("/").filter(Boolean), method = req.method;
 
   if (parts[0] === "login" && method === "POST") {
     const b = await readBody(req), ip = ipOf(req);
@@ -216,23 +371,49 @@ async function api(req, res, p) {
 /* ---------- static files ---------- */
 const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 function serve(req, res, p) {
-  const f = path.join(PUB, path.normalize(p === "/" ? "/index.html" : decodeURIComponent(p)));
+  const normPath = path.normalize(p === "/" ? "/index.html" : decodeURIComponent(p));
+  const f = path.join(PUB, normPath);
   if (!f.startsWith(PUB)) { res.writeHead(403); return res.end(); }
   fs.readFile(f, (e, d) => {
-    if (e) { res.writeHead(404); return res.end("Not found"); }
-    res.writeHead(200, { "Content-Type": MIME[path.extname(f)] || "application/octet-stream", "Cache-Control": "no-cache" }); res.end(d);
+    if (e) {
+      // index.html fallback
+      const indexFile = path.join(PUB, "index.html");
+      return fs.readFile(indexFile, (err, indexData) => {
+        if (err) { res.writeHead(404); return res.end("Not found"); }
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" });
+        res.end(indexData);
+      });
+    }
+    res.writeHead(200, { "Content-Type": MIME[path.extname(f)] || "application/octet-stream", "Cache-Control": "no-cache" });
+    res.end(d);
   });
 }
 
-http.createServer(async (req, res) => {
-  res.setHeader("X-Content-Type-Options", "nosniff"); res.setHeader("X-Frame-Options", "DENY"); res.setHeader("Referrer-Policy", "same-origin");
+async function handler(req, res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "same-origin");
   try {
-    const p = new URL(req.url, "http://x").pathname;
-    if (p === "/healthz") { res.writeHead(200, { "Content-Type": "text/plain" }); return res.end("ok"); }
-    if (p.startsWith("/api/")) return await api(req, res, p);
-    return serve(req, res, p);
+    const rawPath = req.url ? new URL(req.url, "http://x").pathname : "/";
+    if (rawPath === "/healthz") {
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      return res.end("ok");
+    }
+    if (rawPath.startsWith("/api/") || rawPath === "/api") {
+      return await api(req, res, rawPath);
+    }
+    return serve(req, res, rawPath);
   } catch (e) {
     if (e.code === 400 || e.code === 413) return json(res, e.code, { error: e.message });
-    console.error(e); json(res, 500, { error: "Server error" });
+    console.error(e);
+    json(res, 500, { error: "Server error" });
   }
-}).listen(PORT, HOST, () => console.log(`Equipment Management Unit running on http://localhost:${PORT}`));
+}
+
+if (!IS_VERCEL) {
+  http.createServer(handler).listen(PORT, HOST, () =>
+    console.log(`Equipment Management Unit running on http://localhost:${PORT}`)
+  );
+}
+
+module.exports = handler;
